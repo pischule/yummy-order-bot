@@ -2,8 +2,7 @@ name: build-publish
 
 on:
   push:
-    branches:
-      - 'main'
+    branches: [ master ]
 
 jobs:
   docker:
