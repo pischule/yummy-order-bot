@@ -30,4 +30,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: user/yummy-order-bot:latest
+          tags: user/yummy-bot:latest
