@@ -5,7 +5,7 @@ import os
 import re
 from dotenv import load_dotenv
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Message
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Message, ChatMember
 from telegram.ext import Updater, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, CommandHandler
 from telegram.utils.helpers import mention_markdown, escape_markdown
 import cv2 as cv
@@ -46,6 +46,11 @@ def is_group(update: Update) -> bool:
     return update.effective_chat.id == group_chat
 
 
+def user_belongs_to_group(update: Update, context: CallbackContext) -> bool:
+    member: ChatMember = context.bot.get_chat_member(group_chat, update.effective_user.id)
+    return member and member.status in {ChatMember.CREATOR, ChatMember.ADMINISTRATOR, ChatMember.MEMBER}
+
+
 def load_image():
     images = [n for n in os.listdir('data') if n.endswith(('.jpg', '.png', '.jpeg'))]
     if not images:
@@ -80,7 +85,8 @@ def text_handler(update: Update, context: CallbackContext) -> None:
 
 def render_order(item_ids: List[int]) -> str:
     counter = {}
-    for item_id in item_ids: counter[item_id] = counter.get(item_id, 0) + 1
+    for item_id in item_ids:
+        counter[item_id] = counter.get(item_id, 0) + 1
 
     order_message = ''
     for i in counter:
@@ -159,7 +165,7 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     if selected_items:
         reply_text += render_order(selected_items)
     else:
-        reply_text += ' - ничего не выбрано'
+        reply_text += ' - выберите что-нибудь'
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     if query:
@@ -175,15 +181,24 @@ def confirm_order(update: Update, context: CallbackContext) -> None:
     selected_items = parse_selected_items(query.data)
     order_message = mention_markdown(update.effective_user.id, update.effective_user.last_name, version=2) + ':\n'
     order_message += escape_markdown(render_order(selected_items), version=2)
-    query.edit_message_text(text='Заказ создан 👌')
-    # send to group
-    chat_id = update.effective_chat.id
-    message: Message = context.bot.send_message(chat_id=group_chat,
-                                                text=order_message,
-                                                parse_mode=ParseMode.MARKDOWN_V2)
-    context.bot.forwardMessage(chat_id=chat_id,
-                               from_chat_id=message.chat_id,
-                               message_id=message.message_id)
+
+    if user_belongs_to_group(update, context):
+        logger.info(f'Send order to group {group_chat}')
+        query.edit_message_text(text='Заказ создан 👌')
+        # send to group
+        chat_id = update.effective_chat.id
+        message: Message = context.bot.send_message(chat_id=group_chat,
+                                                    text=order_message,
+                                                    parse_mode=ParseMode.MARKDOWN_V2)
+        context.bot.forwardMessage(chat_id=chat_id,
+                                   from_chat_id=message.chat_id,
+                                   message_id=message.message_id)
+    else:
+        logger.warning(f'Confirm order at chat {update.effective_message.chat_id}, user does not belong to group')
+        query.edit_message_text(text='Вы не состоите в группе. Перешлите заказ сами 😉')
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text=order_message,
+                                 parse_mode=ParseMode.MARKDOWN_V2)
 
 
 def cancel_order(update: Update, context: CallbackContext) -> None:
