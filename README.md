@@ -8,3 +8,16 @@
 - картинка парсится [OpenCV](https://opencv.org/) и [Tesseract](https://github.com/tesseract-ocr/tesseract)
 - пользователь видит удобный интерфейс
  <img src="https://user-images.githubusercontent.com/41614960/160286753-e905577e-4f81-47e8-b4be-0d1777f49eb5.jpg" width="350">
+
+---
+
+.env:
+```dotenv
+BOT_TOKEN=*********
+ADMIN_USER=11111111
+GROUP_CHAT=22222222
+YUMMY_USER=33333333
+MENU_HOUR_START=9
+MENU_HOUR_END=12
+ORDER_HOUR_END=14
+```

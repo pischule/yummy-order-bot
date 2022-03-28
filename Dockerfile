@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.9-buster
+FROM python:3.9-slim
 
 RUN \
 apt-get update && \
-apt-get install -y apt-transport-https lsb-release && \
+apt-get install -y apt-transport-https lsb-release curl gnupg && \
 echo "deb https://notesalexp.org/tesseract-ocr5/$(lsb_release -cs)/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/notesalexp.list > /dev/null && \
-wget -O - https://notesalexp.org/debian/alexp_key.asc | apt-key add - && \
+curl https://notesalexp.org/debian/alexp_key.asc | apt-key add - && \
 apt-get update && \
 apt-get install -y gcc libgl1 tesseract-ocr tesseract-ocr-rus
 
