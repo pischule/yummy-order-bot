@@ -27,6 +27,9 @@ admin_user = int(os.environ['ADMIN_USER'])
 yummy_user = int(os.environ['YUMMY_USER'])
 group_chat = int(os.environ['GROUP_CHAT'])
 bot_token = os.environ['BOT_TOKEN']
+menu_hour_start = int(os.environ['MENU_HOUR_START'])
+menu_hour_end = int(os.environ['MENU_HOUR_END'])
+order_hour_end = int(os.environ['ORDER_HOUR_END'])
 
 date_map = {}
 
@@ -39,7 +42,7 @@ def remove_old_dates():
 
 
 def is_menu_update_text(text: str) -> bool:
-    return 'меню на' in text.lower() or '14.00' in text
+    return 'меню на' in text.lower() or f'{order_hour_end}.00' in text
 
 
 def is_group(update: Update) -> bool:
@@ -182,6 +185,12 @@ def confirm_order(update: Update, context: CallbackContext) -> None:
     order_message = mention_markdown(update.effective_user.id, update.effective_user.last_name, version=2) + ':\n'
     order_message += escape_markdown(render_order(selected_items), version=2)
 
+    hour_minsk = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).hour
+    if hour_minsk >= order_hour_end:
+        text = f'После {order_hour_end}:00 заказы не принимаются 😿'
+        query.edit_message_text(text=text)
+        return
+
     if user_belongs_to_group(update, context):
         logger.info(f'Send order to group {group_chat}')
         query.edit_message_text(text='Заказ создан 👌')
@@ -216,7 +225,7 @@ def photo_handler(update: Update, context: CallbackContext) -> None:
         return
 
     hour_minsk = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).hour
-    if not (user_id == admin_user or (9 <= hour_minsk <= 11)):
+    if not (user_id == admin_user or (menu_hour_start <= hour_minsk < menu_hour_end)):
         logger.info(f'Photo handler at chat {update.effective_message.chat_id}, user is yummy but not in time')
         return
 

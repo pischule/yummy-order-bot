@@ -64,7 +64,8 @@ class MenuParser:
             lines = MenuParser._get_lines(block)
             dish_img_lines.extend(lines)
 
-        return [MenuParser._ocr(x) for x in dish_img_lines if len(x) > 4]
+        all_lines = [MenuParser._ocr(x) for x in dish_img_lines]
+        return [x for x in all_lines if len(x) > 2]
 
     @staticmethod
     def _ocr(image: np.ndarray):
