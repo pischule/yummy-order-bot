@@ -64,12 +64,12 @@ class MenuParser:
             lines = MenuParser._get_lines(block)
             dish_img_lines.extend(lines)
 
-        return [MenuParser._ocr(x) for x in dish_img_lines]
+        return [MenuParser._ocr(x) for x in dish_img_lines if len(x) > 4]
 
     @staticmethod
     def _ocr(image: np.ndarray):
         s = pytesseract.image_to_string(image, lang='rus', timeout=5, config='--psm 6 --oem 1')
-        s = util.replace_all(s, '\'‘«»,‚”“°', ' ')
+        s = util.replace_all(s, '\'‘«»,‚”“°_.', ' ')
         table = str.maketrans('<{}©6',
                               'с()сб',
                               '')

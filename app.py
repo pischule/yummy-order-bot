@@ -220,7 +220,6 @@ def photo_handler(update: Update, context: CallbackContext) -> None:
         logger.info(f'Photo handler at chat {update.effective_message.chat_id}, user is yummy but not in time')
         return
 
-
     today = datetime.date.today()
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     image_date = date_map.get(today, tomorrow)
