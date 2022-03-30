@@ -7,9 +7,16 @@
 
 - картинка парсится [OpenCV](https://opencv.org/) и [Tesseract](https://github.com/tesseract-ocr/tesseract)
 - пользователь видит удобный интерфейс
- <img src="https://user-images.githubusercontent.com/41614960/160286753-e905577e-4f81-47e8-b4be-0d1777f49eb5.jpg" width="350">
-
----
+<table>
+ <tr>
+  <td> 
+   <img src="https://user-images.githubusercontent.com/41614960/160935556-8779e0f9-694b-4f63-a080-fbac6a2d6a2c.jpg" width="330">
+  </td>
+  <td>
+   <img src="https://user-images.githubusercontent.com/41614960/160935616-50fa48ef-2317-437d-a46e-21e0b8504743.jpg" width="330">
+  </td>
+ </tr>
+</table>
 
 .env:
 ```dotenv
