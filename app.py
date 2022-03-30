@@ -55,6 +55,11 @@ db.create_tables([User])
 
 
 def settings(update: Update, context: CallbackContext) -> int:
+    if is_group(update):
+        update.message.reply_text(
+            f'Все команды работают только в приватном чате с @{context.bot.username}'
+        )
+        return ConversationHandler.END
     update.message.reply_text(
         f'Укажите имя для заказов'
     )
@@ -176,7 +181,7 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     logger.info(f'Show order keys at chat {update.effective_chat.id}')
     if is_group(update):
         update.message.reply_text(
-            f'Команда работает только в приватном чате с @{context.bot.username}'
+            f'Все команды работают только в приватном чате с @{context.bot.username}'
         )
         return
 
