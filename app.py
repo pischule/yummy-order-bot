@@ -4,9 +4,11 @@ import logging
 import os
 import re
 from dotenv import load_dotenv
+from peewee import SqliteDatabase, Model, BigIntegerField, CharField
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Message, ChatMember
-from telegram.ext import Updater, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, CommandHandler
+from telegram.ext import Updater, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, CommandHandler, \
+    ConversationHandler
 from telegram.utils.helpers import mention_markdown, escape_markdown
 import cv2 as cv
 
@@ -32,6 +34,53 @@ menu_hour_end = int(os.environ['MENU_HOUR_END'])
 order_hour_end = int(os.environ['ORDER_HOUR_END'])
 
 date_map = {}
+
+NAME, = range(1)
+
+db = SqliteDatabase(os.path.join('data', 'yummy.db'))
+
+
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class User(BaseModel):
+    id = BigIntegerField(primary_key=True)
+    name = CharField()
+
+
+db.connect()
+db.create_tables([User])
+
+
+def settings(update: Update, context: CallbackContext) -> int:
+    update.message.reply_text(
+        f'Укажите имя для заказов'
+    )
+    return NAME
+
+
+def name(update: Update, context: CallbackContext) -> int:
+    new_name = update.message.text.strip()
+    logger.info(f'User {update.effective_user.last_name} set name for orders: {new_name}')
+    if len(new_name) < 2:
+        update.message.reply_text(
+            'Длина имени должна быть не менее 2 символов.\nПопробуйте еще раз.'
+        )
+        return NAME
+    try:
+        user = User.get(User.id == update.effective_user.id)
+        user.name = new_name
+        user.save()
+    except User.DoesNotExist:
+        User.create(id=update.effective_user.id, name=new_name)
+    update.message.reply_text('Настройки сохранены')
+    return ConversationHandler.END
+
+
+def cancel(update: Update, context: CallbackContext) -> int:
+    return ConversationHandler.END
 
 
 def remove_old_dates():
@@ -164,7 +213,12 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     control_keys += [InlineKeyboardButton("❌", callback_data='cancel')]
     keyboard.append(control_keys)
 
-    reply_text = f'Меню на {menu_date:%d.%m.%Y} 🗓\n\n{update.effective_user.last_name}:\n'
+    user_name = update.effective_user.last_name
+    user_from_db = User.get_or_none(User.id == update.effective_user.id)
+    if user_from_db:
+        user_name = user_from_db.name
+
+    reply_text = f'Меню на {menu_date:%d.%m.%Y} 🗓\n\n{user_name}:\n'
     if selected_items:
         reply_text += render_order(selected_items)
     else:
@@ -182,7 +236,13 @@ def confirm_order(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     selected_items = parse_selected_items(query.data)
-    order_message = mention_markdown(update.effective_user.id, update.effective_user.last_name, version=2) + ':\n'
+
+    user_name = update.effective_user.last_name
+    user_from_db = User.get_or_none(User.id == update.effective_user.id)
+    if user_from_db:
+        user_name = user_from_db.name
+
+    order_message = mention_markdown(update.effective_user.id, user_name, version=2) + ':\n'
     order_message += escape_markdown(render_order(selected_items), version=2)
 
     hour_minsk = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).hour
@@ -261,6 +321,15 @@ if __name__ == '__main__':
 
     dispatcher = updater.dispatcher
 
+    settings_dialog = ConversationHandler(
+        entry_points=[CommandHandler('settings', settings)],
+        states={
+            NAME: [MessageHandler(Filters.text & ~Filters.command, name)],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+    )
+
+    dispatcher.add_handler(settings_dialog)
     dispatcher.add_handler(CommandHandler('start', show_start_text))
     dispatcher.add_handler(CommandHandler('order', show_order_keys))
     dispatcher.add_handler(CallbackQueryHandler(show_order_keys, pattern='order.*'))

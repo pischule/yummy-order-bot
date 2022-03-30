@@ -3,6 +3,8 @@ name: build-publish
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   docker:
