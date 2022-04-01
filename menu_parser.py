@@ -70,7 +70,7 @@ class MenuParser:
     @staticmethod
     def _ocr(image: np.ndarray):
         s = pytesseract.image_to_string(image, lang='rus', timeout=5, config='--psm 6 --oem 1')
-        s = util.replace_all(s, '\'‘«»,‚”“°_.', ' ')
+        s = util.replace_all(s, '\'`‘«»,‚”“°_.', ' ')
         table = str.maketrans('<{}©6',
                               'с()сб',
                               '')
