@@ -56,9 +56,6 @@ db.create_tables([User])
 
 def settings(update: Update, context: CallbackContext) -> int:
     if is_group(update):
-        update.message.reply_text(
-            f'Все команды работают только в приватном чате с @{context.bot.username}'
-        )
         return ConversationHandler.END
     update.message.reply_text(
         f'Укажите имя для заказов'
@@ -158,10 +155,7 @@ def show_start_text(update: Update, context: CallbackContext) -> None:
     logger.info(f'Show start text at chat {update.effective_message.chat_id}')
 
     if is_group(update):
-        update.message.reply_text(
-            'Привет! Я умею делать заказ из меню Yummy. '
-            f'Создать заказ можно командой /order в приватном чате с @{context.bot.username}'
-        )
+        return
 
     else:
         update.message.reply_text(
@@ -180,9 +174,6 @@ def build_query(prefix: str, selected_items: List[int]) -> str:
 def show_order_keys(update: Update, context: CallbackContext) -> None:
     logger.info(f'Show order keys at chat {update.effective_chat.id}')
     if is_group(update):
-        update.message.reply_text(
-            f'Все команды работают только в приватном чате с @{context.bot.username}'
-        )
         return
 
     if not menu_date or not menu_items:
