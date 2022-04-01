@@ -72,7 +72,7 @@ def name(update: Update, context: CallbackContext) -> int:
     logger.info(f'User {update.effective_user.last_name} set name for orders: {new_name}')
     if not is_valid_name(new_name):
         update.message.reply_text(
-            f'Неверное имя. Имя может содержать только буквы русского алфавита и пробелы. Попробуйте еще раз.'
+            f'Имя может содержать только буквы русского алфавита и пробелы. Попробуйте еще раз'
         )
         return NAME
     try:
@@ -163,7 +163,10 @@ def show_start_text(update: Update, context: CallbackContext) -> None:
 
     else:
         update.message.reply_text(
-            'Привет! Я умею делать заказ из меню Yummy. Создать заказ можно командой /order')
+            'Привет! Я умею делать заказ из меню Yummy.\n\n'
+            '/order      - создать заказ\n'
+            '/settings - настройки бота\n'
+        )
 
 
 def parse_selected_items(query: str) -> List[int]:
@@ -278,7 +281,7 @@ def cancel_order(update: Update, context: CallbackContext) -> None:
     logger.info(f'Cancel order at chat {update.effective_message.chat_id}')
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Отмена")
+    query.delete_message()
 
 
 def photo_handler(update: Update, context: CallbackContext) -> None:
