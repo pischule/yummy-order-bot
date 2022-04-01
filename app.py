@@ -54,6 +54,10 @@ db.connect()
 db.create_tables([User])
 
 
+def is_valid_name(name: str) -> bool:
+    return re.match(r'^[\u0400-\u04FF\s]+$', name) is not None
+
+
 def settings(update: Update, context: CallbackContext) -> int:
     if is_group(update):
         return ConversationHandler.END
@@ -66,9 +70,9 @@ def settings(update: Update, context: CallbackContext) -> int:
 def name(update: Update, context: CallbackContext) -> int:
     new_name = update.message.text.strip()
     logger.info(f'User {update.effective_user.last_name} set name for orders: {new_name}')
-    if len(new_name) < 2:
+    if not is_valid_name(new_name):
         update.message.reply_text(
-            'Длина имени должна быть не менее 2 символов.\nПопробуйте еще раз.'
+            f'Неверное имя. Имя может содержать только буквы русского алфавита и пробелы. Попробуйте еще раз.'
         )
         return NAME
     try:
@@ -184,6 +188,15 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
             update.message.reply_text('Меню еще не загружено 😿')
         return
 
+    user_name = update.effective_user.last_name
+    user_from_db = User.get_or_none(User.id == update.effective_user.id)
+    if user_from_db:
+        user_name = user_from_db.name
+
+    if not is_valid_name(user_name):
+        update.message.reply_text('Имя может содержать только кириллицу. Смените имя в /settings и попробуйте еще раз')
+        return
+
     query = update.callback_query
     selected_items = []
     if query:
@@ -208,11 +221,6 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
         ]
     control_keys += [InlineKeyboardButton("❌", callback_data='cancel')]
     keyboard.append(control_keys)
-
-    user_name = update.effective_user.last_name
-    user_from_db = User.get_or_none(User.id == update.effective_user.id)
-    if user_from_db:
-        user_name = user_from_db.name
 
     reply_text = f'Меню на {menu_date:%d.%m.%Y} 🗓\n\n{user_name}:\n'
     if selected_items:
