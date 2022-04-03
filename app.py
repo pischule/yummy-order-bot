@@ -20,6 +20,7 @@ logger = logging.getLogger('yummy_bot')
 logger.setLevel(logging.INFO)
 
 menu_date: Optional[datetime.date] = None
+menu_publish_date: Optional[datetime.date] = None
 menu_items: List[str] = []
 
 mp = MenuParser()
@@ -120,8 +121,11 @@ def load_image():
 
     global menu_date
     global menu_items
+    global menu_publish_date
     menu_items = mp.dish_names(menu_image)
-    menu_date = datetime.date.fromisoformat(latest_image.split('.')[0])
+    publish_str, date_str = latest_image.split('.')[0].split('_')
+    menu_publish_date = datetime.date.fromisoformat(publish_str)
+    menu_date = datetime.date.fromisoformat(date_str)
 
     for name in images[:-1]:
         logger.info(f'Removing image: {name}')
@@ -183,12 +187,12 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     if is_group(update):
         return
 
-    if not menu_date or not menu_items:
+    if not menu_date or not menu_items or datetime.date.today() != menu_publish_date:
         if update.callback_query:
-            update.callback_query.message.edit_text('Меню не загружено 😿')
+            update.callback_query.message.edit_text('Меню на сегодня ещё не доступно 😿')
             update.callback_query.answer()
         else:
-            update.message.reply_text('Меню еще не загружено 😿')
+            update.message.reply_text('Меню на сегодня ещё не доступно 😿')
         return
 
     user_name = update.effective_user.last_name
@@ -225,7 +229,9 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     control_keys += [InlineKeyboardButton("❌", callback_data='cancel')]
     keyboard.append(control_keys)
 
-    reply_text = f'Меню на {menu_date:%d.%m.%Y} 🗓\n\n{user_name}:\n'
+    weekdays = ('понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье')
+    weekday = weekdays[menu_date.weekday()]
+    reply_text = f'Меню на {weekday} {menu_date:%d.%m} 🗓\n\n{user_name}:\n'
     if selected_items:
         reply_text += render_order(selected_items)
     else:
@@ -255,6 +261,11 @@ def confirm_order(update: Update, context: CallbackContext) -> None:
     hour_minsk = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).hour
     if hour_minsk >= order_hour_end:
         text = f'После {order_hour_end}:00 заказы не принимаются 😿'
+        query.edit_message_text(text=text)
+        return
+
+    if menu_publish_date < datetime.date.today():
+        text = f'Заказ можно сделать только в день публикации меню 🙄'
         query.edit_message_text(text=text)
         return
 
@@ -301,7 +312,7 @@ def photo_handler(update: Update, context: CallbackContext) -> None:
     image_date = date_map.get(today, tomorrow)
 
     img = update.effective_message.photo[-1].get_file()
-    image_name = f'{image_date.isoformat()}.jpeg'
+    image_name = f'{datetime.date.today().isoformat()}_{image_date.isoformat()}.jpeg'
     img.download(os.path.join('data', image_name))
 
     logger.info(f'Saving image: {image_name}')
