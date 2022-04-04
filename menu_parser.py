@@ -10,14 +10,14 @@ import util
 class MenuParser:
 
     def __init__(self) -> None:
-        c1_x_from, c1_x_to, c2_x_from, c2_x_to = 0.13, 0.43, 0.51, 0.80
+        c1_x_from, c1_x_to, c2_x_from, c2_x_to = 0.15, 0.44, 0.50, 0.81
         self._block_rois = [
-            ((c1_x_from, 0.34), (c1_x_to, 0.44)),
-            ((c2_x_from, 0.34), (c2_x_to, 0.44)),
-            ((c1_x_from, 0.52), (c1_x_to, 0.65)),
-            ((c2_x_from, 0.52), (c2_x_to, 0.65)),
-            ((c1_x_from, 0.70), (c1_x_to, 0.80)),
-            ((c2_x_from, 0.70), (c2_x_to, 0.80)),
+            ((c1_x_from, 0.38), (c1_x_to, 0.48)),
+            ((c2_x_from, 0.38), (c2_x_to, 0.48)),
+            ((c1_x_from, 0.53), (c1_x_to, 0.63)),
+            ((c2_x_from, 0.53), (c2_x_to, 0.63)),
+            ((c1_x_from, 0.67), (c1_x_to, 0.78)),
+            ((c2_x_from, 0.67), (c2_x_to, 0.78)),
         ]
 
     @staticmethod
