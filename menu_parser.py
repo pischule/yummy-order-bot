@@ -35,7 +35,11 @@ class MenuParser:
     @staticmethod
     def _threshold(img: np.ndarray):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        return cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
+        ret1, th1 = cv.threshold(gray, 120, 255, cv.THRESH_BINARY)
+        ret2, th2 = cv.threshold(th1, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        blur = cv.GaussianBlur(th2, (1, 1), 0)
+        ret3, th3 = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        return th3
 
     @staticmethod
     def _get_lines(im: np.ndarray):
