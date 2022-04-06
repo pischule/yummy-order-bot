@@ -1,8 +1,0 @@
-version: "2.0"
-
-services:
-  yummy-bot:
-    image: yummy-bot
-    env_file:
-      - .env
-    restart: always
