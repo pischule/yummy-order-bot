@@ -52,12 +52,10 @@ const mapRectangles = (rectangles) => {
     y1 = round(r.y / h);
     x2 = round((r.x + r.w) / w);
     y2 = round((r.y + r.h) / h);
-    return {
-      x1: Math.min(x1, x2),
-      y1: Math.min(y1, y2),
-      x2: Math.max(x1, x2),
-      y2: Math.max(y1, y2),
-    };
+    return [
+      [Math.min(x1, x2), Math.min(y1, y2)],
+      [Math.max(x1, x2), Math.max(y1, y2)],
+    ];
   });
 };
 
