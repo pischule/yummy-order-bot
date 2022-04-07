@@ -1,77 +1,80 @@
-img = new Image();
-img.src = null;
+const img = new Image();
 
-rectangles = [];
-
+const container = document.getElementById("container");
 const canvas = document.getElementById("canvas");
+const resultDiv = document.getElementById("result");
+const file = document.getElementById("file");
+const input = document.getElementById("input");
+const button = document.getElementById("copy");
 const ctx = canvas.getContext("2d");
 
-ctx.canvas.width = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
-
-draw = () => {
-  canvas.setAttribute("width", 800);
-  canvas.setAttribute("height", 1000);
-
-  if (img) {
-    var hRatio = canvas.width / img.width;
-    var vRatio = canvas.height / img.height;
-    var ratio = Math.min(hRatio, vRatio);
-    ctx.drawImage(
-      img,
-      0,
-      0,
-      img.width,
-      img.height,
-      0,
-      0,
-      img.width * ratio,
-      img.height * ratio
-    );
-  }
-
-  for (r of rectangles) {
-    ctx.fillStyle = "rgba(0, 255, 0, 0.3)";
-    ctx.strokeStyle = "rgba(0, 255, 0, 1)";
-    ctx.fillRect(r.x, r.y, r.w, r.h);
-    ctx.strokeRect(r.x, r.y, r.w, r.h);
-  }
-};
-
-input = document.getElementById("input");
-
-const round = (x) => {
-  return Math.round(x * 10000) / 10000;
-};
-
-const mapRectangles = (rectangles) => {
-  const w = img.width;
-  const h = img.height;
-  return rectangles.map((r) => {
-    x1 = round(r.x / w);
-    y1 = round(r.y / h);
-    x2 = round((r.x + r.w) / w);
-    y2 = round((r.y + r.h) / h);
-    return [
-      [Math.min(x1, x2), Math.min(y1, y2)],
-      [Math.max(x1, x2), Math.max(y1, y2)],
-    ];
-  });
-};
-
-const updateInput = () => {
-  input.value = JSON.stringify(mapRectangles(rectangles));
-};
+canvas.width = container.clientWidth;
 
 let x = 0;
 let y = 0;
 let isDrawing = false;
+let ratio = 1;
+
+let rectangles = [];
+
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: ((evt.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
+    y: ((evt.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
+  };
+}
+
+function initImage() {
+  canvas.width = container.clientWidth;
+  ratio = canvas.width / img.width;
+  canvas.height = img.height * ratio;
+  draw();
+}
+
+function draw() {
+  // prettier-ignore
+  ctx.drawImage(img,
+    0, 0, img.width, img.height,
+    0, 0, img.width * ratio, img.height * ratio
+  );
+
+  for (r of rectangles) {
+    ctx.fillStyle = "rgba(255, 221, 75, 0.5)";
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+  }
+}
+
+function round(x) {
+  return Math.round(x * 100000) / 100000;
+}
+
+function mapRectangles(rectangles) {
+  const w = img.width * ratio;
+  const h = img.height * ratio;
+  return rectangles.map((r) => {
+    const x1 = round(r.x / w);
+    const y1 = round(r.y / h);
+    const x2 = round((r.x + r.w) / w);
+    const y2 = round((r.y + r.h) / h);
+    return [
+      Math.min(x1, x2),
+      Math.min(y1, y2),
+      Math.max(x1, x2),
+      Math.max(y1, y2),
+    ];
+  });
+}
+
+function updateInput() {
+  input.value = JSON.stringify(mapRectangles(rectangles));
+}
 
 canvas.addEventListener("mousedown", (e) => {
-  x = e.offsetX;
+  pos = getMousePos(canvas, e);
   rectangles.push({
-    x: e.offsetX,
-    y: e.offsetY,
+    x: pos.x,
+    y: pos.y,
     w: 0,
     h: 0,
   });
@@ -92,8 +95,9 @@ canvas.addEventListener("mousemove", (e) => {
 
   last = rectangles[rectangles.length - 1];
   if (last) {
-    last.w = e.offsetX - last.x;
-    last.h = e.offsetY - last.y;
+    const { x, y } = getMousePos(canvas, e);
+    last.w = x - last.x;
+    last.h = y - last.y;
   }
   draw();
 });
@@ -106,23 +110,19 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-updateClipboard = (newClip) => {
+function updateClipboard(newClip) {
   navigator.clipboard.writeText(newClip).then(
     () => {},
     () => {
       console.log("Failed to copy");
     }
   );
-};
+}
 
-button = document.getElementById("copy");
 button.addEventListener("click", () => {
   updateClipboard(JSON.stringify(mapRectangles(rectangles)));
 });
 
-resultDiv = document.getElementById("result");
-
-file = document.getElementById("file");
 file.addEventListener(
   "change",
   (e) => {
@@ -131,11 +131,13 @@ file.addEventListener(
     reader.onload = (e) => {
       img.src = e.target.result;
       rectangles = [];
-      img.onload = draw;
+      img.onload = initImage;
       updateInput();
-      resultDiv.style.display = "block";
     };
+    result.classList.remove("invisible");
     reader.readAsDataURL(file);
   },
   false
 );
+
+window.onresize = initImage;
