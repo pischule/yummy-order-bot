@@ -71,6 +71,9 @@ function updateInput() {
 }
 
 canvas.addEventListener("mousedown", (e) => {
+  if (e.button !== 0) {
+    return;
+  }
   pos = getMousePos(canvas, e);
   rectangles.push({
     x: pos.x,
@@ -82,6 +85,9 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mouseup", (e) => {
+  if (e.button !== 0) {
+    return;
+  }
   x = 0;
   y = 0;
   isDrawing = false;
