@@ -10,22 +10,14 @@ import util
 class MenuParser:
 
     def __init__(self) -> None:
-        c1_x_from, c1_x_to, c2_x_from, c2_x_to = 0.13, 0.43, 0.51, 0.80
-        self._block_rois = [
-            ((c1_x_from, 0.34), (c1_x_to, 0.44)),
-            ((c2_x_from, 0.34), (c2_x_to, 0.44)),
-            ((c1_x_from, 0.52), (c1_x_to, 0.65)),
-            ((c2_x_from, 0.52), (c2_x_to, 0.65)),
-            ((c1_x_from, 0.70), (c1_x_to, 0.80)),
-            ((c2_x_from, 0.70), (c2_x_to, 0.80)),
-        ]
+        self.rois = []
 
     @staticmethod
-    def _roi_img_relative(img, p1, p2):
+    def _roi_img_relative(img, x1, y1, x2, y2):
         img_width = img.shape[1]
         img_height = img.shape[0]
-        absolute_p1 = (int(p1[0] * img_width), int(p1[1] * img_height))
-        absolute_p2 = (int(p2[0] * img_width), int(p2[1] * img_height))
+        absolute_p1 = (int(x1 * img_width), int(y1 * img_height))
+        absolute_p2 = (int(x2 * img_width), int(y2 * img_height))
         return img[absolute_p1[1]:absolute_p2[1], absolute_p1[0]:absolute_p2[0]]
 
     @staticmethod
@@ -60,8 +52,7 @@ class MenuParser:
 
     def dish_names(self, img: np.ndarray) -> List[str]:
         th = MenuParser._threshold(img)
-        block_images = [MenuParser._roi_img_relative(
-            th, *r) for r in self._block_rois]
+        block_images = [MenuParser._roi_img_relative(th, *r) for r in self.rois]
 
         dish_img_lines = []
         for block in block_images:
@@ -75,8 +66,8 @@ class MenuParser:
     def _ocr(image: np.ndarray):
         s = pytesseract.image_to_string(image, lang='rus', timeout=5, config='--psm 6 --oem 1')
         s = util.replace_all(s, '\'`‘«»,‚”“°_.', ' ')
-        table = str.maketrans('<{}©6',
-                              'с()сб',
+        table = str.maketrans('<‹{}©6',
+                              'сс()сб',
                               '')
         s = s.translate(table)
         s = s.strip().lower()

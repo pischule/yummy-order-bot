@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 import datetime
 import logging
@@ -39,6 +40,26 @@ date_map = {}
 NAME, = range(1)
 
 db = SqliteDatabase(os.path.join('data', 'yummy.db'))
+
+
+def load_rois():
+    with open(os.path.join('data', 'rois.json'), 'r') as f:
+        mp.rois = json.load(f)
+
+
+load_rois()
+
+
+def update_rois(roi_str: str):
+    rois_json = json.loads(roi_str)
+    if not rois_json:
+        raise ValueError('Empty rois')
+    for roi in rois_json:
+        if len(roi) != 4:
+            raise ValueError('Invalid roi')
+    with open(os.path.join('data', 'rois.json'), 'w') as f:
+        json.dump(mp.rois, f)
+    mp.rois = rois_json
 
 
 class BaseModel(Model):
@@ -322,6 +343,27 @@ def photo_handler(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f'🔄 Меню обновлено: {len(menu_items)} позиций')
 
 
+def update_rois_command(update: Update, context: CallbackContext) -> None:
+    logger.info(f'Update rois command at chat {update.effective_message.chat_id}')
+    user_id = update.effective_user.id
+
+    if user_id != admin_user:
+        return
+
+    text_after_command = update.message.text.split('/roi', 1)[1].strip()
+    if not text_after_command:
+        update.message.reply_text('https://pischule.github.io/yummy-bot/')
+        return
+
+    try:
+        update_rois(text_after_command)
+        load_image()
+        update.message.reply_text(f'🔄 ROI обновлены: {len(mp.rois)}')
+    except Exception as e:
+        logger.error(f'Update rois command at chat {update.effective_message.chat_id}, error: {e}')
+        update.message.reply_text(f'🔄 Ошибка обновления ROI: {e}')
+
+
 def unknown_query(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
@@ -350,6 +392,7 @@ if __name__ == '__main__':
     dispatcher.add_handler(settings_dialog)
     dispatcher.add_handler(CommandHandler('start', show_start_text))
     dispatcher.add_handler(CommandHandler('order', show_order_keys))
+    dispatcher.add_handler(CommandHandler('roi', update_rois_command))
     dispatcher.add_handler(CallbackQueryHandler(show_order_keys, pattern='order.*'))
     dispatcher.add_handler(CallbackQueryHandler(confirm_order, pattern='confirm.*'))
     dispatcher.add_handler(CallbackQueryHandler(cancel_order, pattern='cancel'))
