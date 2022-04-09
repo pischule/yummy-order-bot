@@ -13,17 +13,21 @@
     />
   </head>
   <body>
-    <div id="container" class="container-sm">
-      <h1>ROI creator</h1>
-      <input class="form-control" id="file" name="file" type="file" />
-      <div class="input-group mb-3 invisible" id="result">
-        <span class="input-group-text">ROIs: </span>
-        <input id="input" type="text" class="form-control" />
-        <button class="btn btn-outline-secondary" type="button" id="copy">
-          Copy
-        </button>
+    <div class="container">
+      <div class="row justify-content-md-center">
+        <div id="container" class="col-md-8">
+          <h1>ROI creator</h1>
+          <input class="form-control" id="file" name="file" type="file" />
+          <div class="input-group mb-3 invisible" id="result">
+            <span class="input-group-text">ROIs: </span>
+            <input id="input" type="text" class="form-control" />
+            <button class="btn btn-outline-secondary" type="button" id="copy">
+              Copy
+            </button>
+          </div>
+          <canvas id="canvas"></canvas>
+        </div>
       </div>
-      <canvas id="canvas"></canvas>
     </div>
   </body>
   <script src="index.js"></script>

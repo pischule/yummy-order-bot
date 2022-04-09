@@ -8,25 +8,28 @@ const input = document.getElementById("input");
 const button = document.getElementById("copy");
 const ctx = canvas.getContext("2d");
 
-canvas.width = container.clientWidth;
-
 let x = 0;
 let y = 0;
 let isDrawing = false;
+let movingIndex = -1;
 let ratio = 1;
-
 let rectangles = [];
+let lastPos = null;
 
-function getMousePos(canvas, evt) {
-  const rect = canvas.getBoundingClientRect();
+function rect2canvas(r) {
   return {
-    x: ((evt.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
-    y: ((evt.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
+    x: r.x * canvas.width,
+    y: r.y * canvas.height,
+    w: r.w * canvas.width,
+    h: r.h * canvas.height,
   };
 }
 
 function initImage() {
-  canvas.width = container.clientWidth;
+  const cs = getComputedStyle(container);
+  const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+  canvas.width = container.clientWidth - paddingX - borderX;
   ratio = canvas.width / img.width;
   canvas.height = img.height * ratio;
   draw();
@@ -36,12 +39,13 @@ function draw() {
   // prettier-ignore
   ctx.drawImage(img,
     0, 0, img.width, img.height,
-    0, 0, img.width * ratio, img.height * ratio
+    0, 0, canvas.width, canvas.height
   );
 
   for (r of rectangles) {
     ctx.fillStyle = "rgba(255, 221, 75, 0.5)";
-    ctx.fillRect(r.x, r.y, r.w, r.h);
+    const cr = rect2canvas(r);
+    ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
   }
 }
 
@@ -50,19 +54,8 @@ function round(x) {
 }
 
 function mapRectangles(rectangles) {
-  const w = img.width * ratio;
-  const h = img.height * ratio;
-  return rectangles.map((r) => {
-    const x1 = round(r.x / w);
-    const y1 = round(r.y / h);
-    const x2 = round((r.x + r.w) / w);
-    const y2 = round((r.y + r.h) / h);
-    return [
-      Math.min(x1, x2),
-      Math.min(y1, y2),
-      Math.max(x1, x2),
-      Math.max(y1, y2),
-    ];
+  return rectangles.map(normalizeRectangle).map((r) => {
+    return [r.x, r.y, r.x + r.w, r.y + r.h].map(round);
   });
 }
 
@@ -70,18 +63,35 @@ function updateInput() {
   input.value = JSON.stringify(mapRectangles(rectangles));
 }
 
+function mousePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) / (rect.right - rect.left),
+    y: (e.clientY - rect.top) / (rect.bottom - rect.top),
+  };
+}
+
 canvas.addEventListener("mousedown", (e) => {
   if (e.button !== 0) {
     return;
   }
-  pos = getMousePos(canvas, e);
-  rectangles.push({
-    x: pos.x,
-    y: pos.y,
-    w: 0,
-    h: 0,
-  });
-  isDrawing = true;
+  lastPos = mousePos(e);
+  const index = rectIndex(lastPos.x, lastPos.y);
+  if (index >= 0) {
+    isMoving = true;
+    // move to top
+    r = rectangles[index];
+    rectangles.splice(index, 1);
+    rectangles.push(r);
+  } else {
+    isDrawing = true;
+    rectangles.push({
+      x: lastPos.x,
+      y: lastPos.y,
+      w: 0,
+      h: 0,
+    });
+  }
 });
 
 canvas.addEventListener("mouseup", (e) => {
@@ -91,20 +101,25 @@ canvas.addEventListener("mouseup", (e) => {
   x = 0;
   y = 0;
   isDrawing = false;
+  isMoving = false;
+  lastPos = null;
   updateInput();
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!isDrawing) {
+  last = rectangles[rectangles.length - 1];
+  if (!last) {
     return;
   }
-
-  last = rectangles[rectangles.length - 1];
-  if (last) {
-    const { x, y } = getMousePos(canvas, e);
+  const { x, y } = mousePos(e);
+  if (isDrawing) {
     last.w = x - last.x;
     last.h = y - last.y;
+  } else if (isMoving) {
+    last.x += x - lastPos.x;
+    last.y += y - lastPos.y;
   }
+  lastPos = { x, y };
   draw();
 });
 
@@ -123,6 +138,26 @@ function updateClipboard(newClip) {
       console.log("Failed to copy");
     }
   );
+}
+
+function normalizeRectangle(r) {
+  return {
+    x: Math.min(r.x, r.x + r.w),
+    y: Math.min(r.y, r.y + r.h),
+    w: Math.abs(r.w),
+    h: Math.abs(r.h),
+  };
+}
+
+function rectIndex(x, y) {
+  for (let i = rectangles.length - 1; i >= 0; i--) {
+    const r = rectangles[i];
+    const nr = normalizeRectangle(r);
+    if (x >= nr.x && x <= nr.x + nr.w && y >= nr.y && y <= nr.y + nr.h) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 button.addEventListener("click", () => {
@@ -145,5 +180,24 @@ file.addEventListener(
   },
   false
 );
+
+input.addEventListener("keyup", (e) => {
+  if (e.key == "Enter") {
+    try {
+      rectangles = JSON.parse(input.value);
+      rectangles = rectangles.map((r) => {
+        return {
+          x: r[0],
+          y: r[1],
+          w: r[2] - r[0],
+          h: r[3] - r[1],
+        };
+      });
+      draw();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+});
 
 window.onresize = initImage;
