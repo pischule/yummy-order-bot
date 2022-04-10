@@ -189,8 +189,8 @@ def show_start_text(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text(
             'Привет! Я умею делать заказ из меню Yummy.\n\n'
-            '/order      - создать заказ\n'
-            '/settings - настройки бота\n'
+            '/order - создать заказ\n'
+            '/settings - настройки'
         )
 
 
@@ -250,7 +250,7 @@ def show_order_keys(update: Update, context: CallbackContext) -> None:
     control_keys += [InlineKeyboardButton("❌", callback_data='cancel')]
     keyboard.append(control_keys)
 
-    weekdays = ('понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье')
+    weekdays = ('понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье')
     weekday = weekdays[menu_date.weekday()]
     reply_text = f'Меню на {weekday} {menu_date:%d.%m} 🗓\n\n{user_name}:\n'
     if selected_items:
