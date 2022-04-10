@@ -34,5 +34,5 @@ ORDER_HOUR_END=14
 ```
 
 Для настройки регионов интереса (ROI) в боте есть команда <kbd>/roi</kbd> и соответствующее [приложение](https://pischule.github.io/yummy-bot/) в ветке [frontend](https://github.com/pischule/yummy-bot/tree/frontend)
-<img width="785" alt="image" src="https://user-images.githubusercontent.com/41614960/162608913-122baab4-b1a0-43d1-95be-5fd6eea6377b.png">
+<img width="785" alt="image" src="https://user-images.githubusercontent.com/41614960/162613359-01ad5984-a823-4b12-88d2-2c98112f7b99.png">
 <img width="785" alt="image" src="https://user-images.githubusercontent.com/41614960/162609297-19a2e03c-af6f-4650-8d0a-5d8a740dff1e.png">
