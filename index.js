@@ -12,7 +12,6 @@ let x = 0;
 let y = 0;
 let isDrawing = false;
 let movingIndex = -1;
-let ratio = 1;
 let rectangles = [];
 let lastPos = null;
 
@@ -30,20 +29,22 @@ function initImage() {
   const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
   const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
   canvas.width = container.clientWidth - paddingX - borderX;
-  ratio = canvas.width / img.width;
+  const ratio = canvas.width / img.width;
   canvas.height = img.height * ratio;
   draw();
 }
 
 function draw() {
+  ctx.globalCompositeOperation = "copy";
   // prettier-ignore
   ctx.drawImage(img,
     0, 0, img.width, img.height,
     0, 0, canvas.width, canvas.height
   );
 
+  ctx.globalCompositeOperation = "difference";
   for (r of rectangles) {
-    ctx.fillStyle = "rgba(255, 221, 75, 0.5)";
+    ctx.fillStyle = "white";
     const cr = rect2canvas(r);
     ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
   }
@@ -133,11 +134,16 @@ window.addEventListener("keydown", (e) => {
 
 function updateClipboard(newClip) {
   navigator.clipboard.writeText(newClip).then(
-    () => {},
     () => {
-      console.log("Failed to copy");
+      button.innerHTML = "Copied!";
+    },
+    () => {
+      button.innerHTML = "Failed to copy!";
     }
   );
+  setTimeout(() => {
+    button.innerHTML = "Copy";
+  }, 2000);
 }
 
 function normalizeRectangle(r) {
