@@ -11,17 +11,21 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div class="container">
       <div class="row justify-content-md-center">
         <div id="container" class="col-md-10 col-lg-8 col-xxl-6">
           <h1>ROI creator</h1>
-          <input class="form-control" id="file" name="file" type="file" />
+          <input class="form-control mb-3" id="file" name="file" type="file" />
           <div class="input-group mb-3 invisible" id="result">
             <span class="input-group-text">ROIs: </span>
-            <input id="input" type="text" class="form-control" />
+            <input
+              id="input"
+              type="text"
+              onfocus="this.select();"
+              class="form-control"
+            />
             <button class="btn btn-primary" type="button" id="copy">
               Copy
             </button>
