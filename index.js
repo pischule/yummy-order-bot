@@ -27,8 +27,7 @@ function rect2canvas(r) {
 function initImage() {
   const cs = getComputedStyle(container);
   const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-  const borderX =
-    parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+  const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
   canvas.width = container.clientWidth - paddingX - borderX;
   const ratio = canvas.width / img.width;
   canvas.height = img.height * ratio;
@@ -57,16 +56,7 @@ function round(x) {
 
 function mapRectangles(rectangles) {
   return rectangles.map(normalizeRectangle).map((r) => {
-    return {
-      min: {
-        x: r.x,
-        y: r.y,
-      },
-      max: {
-        x: r.x + r.w,
-        y: r.y + r.h,
-      },
-    };
+    return [r.x, r.y, r.x + r.w, r.y + r.h].map(round);
   });
 }
 
@@ -203,10 +193,10 @@ input.addEventListener("keyup", (e) => {
       rectangles = JSON.parse(input.value);
       rectangles = rectangles.map((r) => {
         return {
-          x: r.min.x,
-          y: r.min.y,
-          w: r.max.x - r.min.x,
-          h: r.max.y - r.min.y,
+          x: r[0],
+          y: r[1],
+          w: r[2] - r[0],
+          h: r[3] - r[1],
         };
       });
       draw();
