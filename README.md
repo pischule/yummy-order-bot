@@ -1,5 +1,7 @@
 # Бот для заказа еды в офис
 
+(эта версия больше не поддерживается, я [переписал](https://github.com/pischule/yummy-bot-2) приложение на go)
+
 ![GitHub top language](https://img.shields.io/github/languages/top/pischule/yummy-bot) [![build-publish](https://github.com/pischule/yummy-bot/actions/workflows/docker-build-publish.yml/badge.svg)](https://github.com/pischule/yummy-bot/actions/workflows/docker-build-publish.yml) ![Docker Pulls](https://img.shields.io/docker/pulls/pischule/yummy-bot)
 
 - бот получает фото меню
